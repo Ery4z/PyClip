@@ -3,3 +3,4 @@
 config.txt
 *.rar
 *.mp3
+.vs/*
