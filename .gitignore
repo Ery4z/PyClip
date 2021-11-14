@@ -4,3 +4,5 @@ config.txt
 *.rar
 *.mp3
 .vs/*
+.vscode/*
+StartupPyClip.cmd

@@ -20,6 +20,16 @@ if os.path.exists(tmp5):
     os.remove(tmp5)
 
 
+def verify_dir(dir):
+    path = os.path.join(os.path.dirname(os.path.realpath(__file__)), dir)
+    isExist = os.path.exists(path)
+
+    if not isExist:
+
+        # Create a new directory because it does not exist
+        os.makedirs(path)
+
+
 class Enregistreur(Thread):
     def __init__(self, Stream, duree, nom):
         Thread.__init__(self)
@@ -54,17 +64,14 @@ class Enregistreur(Thread):
                     )
                     + ".wav"
                 )
-                write(name, fs, record)
+                write(self.nom + "\\" + name, fs, record)
                 self.perma_save = False
 
             else:
                 write("tmp_" + self.nom + ".wav", fs, record)
 
 
-def start_record(
-    output1="CABLE-A Output (VB-Audio Cable ",
-    output2="CABLE Output (VB-Audio Virtual ",
-):
+def start_record():
 
     duree_enregistrement = 1  # En minutes
     config = load_setings()
@@ -81,13 +88,14 @@ def start_record(
     for k in range(0, len(d)):
         for entry in config["entries"]:
             if (
-                d[k]["name"] == output1
+                d[k]["name"] == entry["name"]
                 and d[k]["hostapi"] == 0
                 and d[k]["max_input_channels"] > 0
             ):
                 list_to_record.append([k, entry["label"]])
 
-    print(list_to_record)
+    for record in list_to_record:
+        verify_dir(record[1])
     for record_param in list_to_record:
         if record_param[0] != -1:
             stream_list.append(
@@ -102,7 +110,7 @@ def start_record(
             )
 
     for stream in stream_list:
-        stream.start()
+        stream[0].start()
         listener_list.append(
             [
                 Enregistreur(stream[0], 60 * duree_enregistrement, stream[1]),
@@ -111,7 +119,7 @@ def start_record(
         )
 
     for listener in listener_list:
-        listener.start()
+        listener[0].start()
 
     while True:
         if (
@@ -143,7 +151,7 @@ def start_record(
             )
             tmp = f"tmp_{listener[1]}.wav"
             if os.path.exists(tmp):
-                os.rename(tmp, filename)
+                os.rename(tmp, listener[1] + "\\" + filename)
 
         print(
             "Les dernieres minutes sont en cours de traitement, deux fichiers seront bientot cree."
@@ -153,81 +161,13 @@ def start_record(
         )
 
 
-def valid_start(in1, in2, window=None):
-    if window is not None:
-        window.destroy()
-    start_record(output1=in1, output2=in2)
-
-
 def load_setings():
     with open("config.txt", "r") as f:
-        config = json.load(f.read())
+        try:
+            config = json.loads(f.read())
+        except:
+            return {"entries": []}
         return config
 
 
-def save_settings(periph_select, label_select, window=None):
-    config = {
-        "entries": [
-            {"name": periph_select[0].get(), "label": label_select[0].get()},
-            {"name": periph_select[1].get(), "label": label_select[1].get()},
-        ]
-    }
-    if window is not None:
-        window.destroy()
-    with open("config.txt", "w") as f:
-        f.write(json.dumps(config))
-
-
-def choose():
-    list_devices = sd.query_devices()
-    real_list = []
-    for device in list_devices:
-        if device["hostapi"] == 0 and device["max_input_channels"] > 0:
-            real_list.append(device)
-
-    name_list = [device["name"] for device in real_list]
-    window = tkinter.Tk()
-
-    window.title("Welcome to LikeGeeks app")
-
-    window.geometry("350x200")
-    label1 = tkinter.Label(window, text="In1")
-    label1.grid(column=0, columnspan=1, row=1)
-    label2 = tkinter.Label(window, text="In2")
-    label2.grid(column=0, columnspan=1, row=2)
-
-    labelPeriph = tkinter.Label(window, text="Periph")
-    labelPeriph.grid(column=1, columnspan=4, row=0)
-    labelLabel = tkinter.Label(window, text="Label")
-    labelLabel.grid(column=5, columnspan=4, row=0)
-
-    entry1 = tkinter.Entry(window)
-    entry1.grid(column=5, columnspan=4, row=1)
-
-    combo_1 = ttk.Combobox(window)
-    combo_1["values"] = name_list
-    combo_1.current(1)  # set the selected item
-    combo_1.grid(column=1, columnspan=4, row=1)
-
-    entry2 = tkinter.Entry(window)
-    entry2.grid(column=5, columnspan=4, row=2)
-
-    combo_2 = ttk.Combobox(window)
-    combo_2["values"] = name_list
-    combo_2.current(1)  # set the selected item
-    combo_2.grid(column=1, columnspan=4, row=2)
-    periph_select = [combo_1, combo_2]
-    label_select = [entry1, entry2]
-    b_valid = tkinter.Button(
-        window,
-        text="Valid",
-        command=lambda: save_settings(
-            periph_select, label_select, window=window
-        ),
-    )
-    b_valid.grid(column=0, columnspan=4, row=3)
-
-    window.mainloop()
-
-
-choose()
+start_record()
