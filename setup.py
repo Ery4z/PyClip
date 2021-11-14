@@ -119,7 +119,10 @@ def startup(value, config):
 
 
 def load_setings():
-    with open("config.txt", "r") as f:
+    config_file = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "config.txt"
+    )
+    with open(config_file, "r") as f:
         try:
             config = json.loads(f.read())
         except:
@@ -128,7 +131,9 @@ def load_setings():
 
 
 def save_settings(config, window=None):
-
+    config_file = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "config.txt"
+    )
     start_app_address = os.path.join(
         os.path.dirname(os.path.realpath(__file__)), "run.py"
     )
@@ -136,11 +141,12 @@ def save_settings(config, window=None):
 
     if config["startup"]:
         with open(startup_file, "w") as f:
-            f.write(f"cd {os.path.dirname(os.path.realpath(__file__))}\npython run.py")
+            f.write(
+                f"cd {os.path.dirname(os.path.realpath(__file__))}\npython run.py")
 
     if window is not None:
         window.destroy()
-    with open("config.txt", "w") as f:
+    with open(config_file, "w") as f:
         f.write(json.dumps(config))
 
 
