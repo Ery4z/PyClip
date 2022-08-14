@@ -1,1 +1,1 @@
-{"entities":[]}
+{"entries": [{"name": "Microphone (Yeti Classic)", "label": "Microphone"}, {"name": "CABLE-A Output (VB-Audio Cable ", "label": "Discord"}, {"name": "VoiceMeeter Output (VB-Audio Vo", "label": "General"}], "startup": 1}

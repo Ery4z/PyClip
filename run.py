@@ -7,6 +7,14 @@ import tkinter
 from tkinter import ttk
 import json
 from pydub import AudioSegment
+from pynput import keyboard
+from datetime import datetime
+WANTED_KEY = keyboard.Key.f2
+
+
+
+
+
 
 os.system("cls")
 p = os.path.realpath(__file__)
@@ -74,7 +82,7 @@ class Enregistreur(Thread):
                 name = (
                     str(
                         time.strftime(
-                            self.nom + "_%Y_%m_%d_%H_%M_%S_part2",
+                            self.nom + "_%Y_%m_%d__%H_%M_%S_part2",
                             time.gmtime(time.time()),
                         )
                     )
@@ -105,21 +113,29 @@ class Enregistreur(Thread):
                 os.remove(filename_2.replace("wav","mp3"))
                 self.pipe.flush_to_process()
                 
+                print(f"{datetime.now().strftime('%H:%M:%S')} | Processing {self.nom} finished.                                                    ")
+                print("Waiting for the F2 key to be pressed to start recording...                                                    ", end="\r")
+                
                 
                 self.perma_save = False
 
             else:
                 write("tmp_" + self.nom + ".wav", fs, record)
+                self.pipe.global_pipe.ready_status = True
 
 class RecorderPipe:
-    def __init__(self):
+    def __init__(self,global_pipe):
         self.to_process = None
+        self.global_pipe = global_pipe
     def set_to_process(self, to_process):
         self.to_process = to_process
     def get_to_process(self):
         return self.to_process
     def flush_to_process(self):
         self.to_process = None
+
+class GlobalPipe:
+    ready_status = False
 
 def start_record():
 
@@ -134,6 +150,13 @@ def start_record():
     list_to_record = []
     stream_list = []
     listener_list = []
+    
+    global_pipe = GlobalPipe()
+    
+    
+    
+    
+    
 
 
     for k in range(0, len(d)):
@@ -162,7 +185,7 @@ def start_record():
 
     for stream in stream_list:
         stream[0].start()
-        pipe = RecorderPipe()
+        pipe = RecorderPipe(global_pipe)
         
         listener_list.append(
             [
@@ -173,8 +196,48 @@ def start_record():
 
     for listener in listener_list:
         listener[0].start()
+        
+    print(f"{datetime.now().strftime('%H:%M:%S')} | Recorders armed. Please wait for the recording process to setup...                           ", end="\r")
+    while not global_pipe.ready_status:
+        time.sleep(1)
+    print(f"{datetime.now().strftime('%H:%M:%S')} | Recorders ready. Please press F2 to capture last two minutes.                           \a", end="\r")
 
-    while True:
+    def on_release(key):
+        
+        if key == WANTED_KEY:
+                # Stop listener
+                print(f"{datetime.now().strftime('%H:%M:%S')} | Processing the last two minutes please wait...                                                    \a", end="\r")
+                
+                for listener in listener_list:
+                    listener[0].perma_save = True
+
+                    filename = (
+                        str(
+                            time.strftime(
+                                f"{listener[1]}_%Y_%m_%d__%H_%M_%S_part1",
+                                time.gmtime(time.time()),
+                            )
+                        )
+                        + ".wav"
+                    )
+                    tmp = f"tmp_{listener[1]}.wav"
+                    if os.path.exists(tmp):
+                        file_path = "record_" + listener[1] + "\\" + filename
+                        os.rename(tmp, file_path)
+                        
+                        listener[2].set_to_process(file_path.replace(".wav",".mp3"))
+                        
+                        file_converter = ConvertFile(file_path)
+                        file_converter.start()
+                
+            
+        
+
+    # Collect events until released
+    with keyboard.Listener(
+            on_release=on_release) as listener:
+        listener.join()
+    """while True:
         if (
             str(
                 input(
@@ -196,7 +259,7 @@ def start_record():
             filename = (
                 str(
                     time.strftime(
-                        f"{listener[1]}_%Y_%m_%d_%H_%M_%S_part1",
+                        f"{listener[1]}_%Y_%m_%d__%H_%M_%S_part1",
                         time.gmtime(time.time()),
                     )
                 )
@@ -218,7 +281,7 @@ def start_record():
         )
         print(
             "-------------------------------------------------------------------"
-        )
+        )"""
 
 
 def load_setings():

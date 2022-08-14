@@ -6,3 +6,5 @@ config.txt
 .vs/*
 .vscode/*
 StartupPyClip.cmd
+recorded_*
+config.txt
