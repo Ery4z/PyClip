@@ -6,7 +6,16 @@ import sounddevice as sd
 
 
 def Settings():
-    config = load_setings()
+    
+    
+    
+    try:
+        config = load_setings()
+    except FileNotFoundError:
+        config = {"entries":[],"startup": 0}
+        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "config.json"), "w") as f:
+            f.write(json.dumps(config))
+            
     devices_selected = []
     for entry in config["entries"]:
         devices_selected.append([entry["name"], entry["label"]])
@@ -120,7 +129,7 @@ def startup(value, config):
 
 def load_setings():
     config_file = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), "config.txt"
+        os.path.dirname(os.path.realpath(__file__)), "config.json"
     )
     with open(config_file, "r") as f:
         try:
@@ -132,7 +141,7 @@ def load_setings():
 
 def save_settings(config, window=None):
     config_file = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), "config.txt"
+        os.path.dirname(os.path.realpath(__file__)), "config.json"
     )
     start_app_address = os.path.join(
         os.path.dirname(os.path.realpath(__file__)), "run.py"

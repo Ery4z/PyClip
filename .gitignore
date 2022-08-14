@@ -1,10 +1,10 @@
 *.wav
 *.pkf
-config.txt
+config.json
 *.rar
 *.mp3
 .vs/*
 .vscode/*
 StartupPyClip.cmd
 recorded_*
-config.txt
+config.json

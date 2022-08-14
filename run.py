@@ -285,7 +285,7 @@ def start_record():
 
 
 def load_setings():
-    with open("config.txt", "r") as f:
+    with open("config.json", "r") as f:
         try:
             config = json.loads(f.read())
         except:
