@@ -6,6 +6,7 @@ import os
 import tkinter
 from tkinter import ttk
 import json
+from pydub import AudioSegment
 
 os.system("cls")
 p = os.path.realpath(__file__)
@@ -29,15 +30,30 @@ def verify_dir(dir):
         # Create a new directory because it does not exist
         os.makedirs(path)
 
+class ConvertFile(Thread):
+    def __init__(self, filepath,from_type="wav",to_type="mp3"):
+        Thread.__init__(self)
+        self.filepath = filepath
+        self.from_type = from_type
+        self.to_type = to_type
+        
+    def run(self):
+        new_filepath= self.filepath.replace("."+self.from_type,"."+self.to_type)
+        sound = AudioSegment.from_wav(self.filepath)
+        sound.export(new_filepath, format=self.to_type)
+        os.remove(self.filepath)
+
+
 
 class Enregistreur(Thread):
-    def __init__(self, Stream, duree, nom):
+    def __init__(self, Stream, duree, nom, pipe):
         Thread.__init__(self)
         self.duree = duree
         self.perma_save = False
         self.follow = True
         self.nom = nom
         self.Stream = Stream
+        self.pipe = pipe
         print("Thread " + self.nom + " initialise.")
 
     def Save(self):
@@ -64,12 +80,46 @@ class Enregistreur(Thread):
                     )
                     + ".wav"
                 )
-                write(self.nom + "\\" + name, fs, record)
+                
+                filename_2 = "record_"+self.nom + "\\" + name
+                filename_1 = self.pipe.get_to_process()
+                
+                filename_final = filename_1.replace("_part1","")
+                
+                write(filename_2, fs, record)
+                file_converter = ConvertFile(filename_2)
+                file_converter.start()
+                file_converter.join()
+                try:
+                    file_1 = AudioSegment.from_mp3(filename_1)
+                except :
+                    file_1 = AudioSegment.empty()
+                
+                try:
+                    file_2 = AudioSegment.from_mp3(filename_2.replace("wav","mp3"))
+                except :
+                    file_2 = AudioSegment.empty() 
+                file_final = file_1 + file_2
+                file_final.export(filename_final, format="mp3")
+                os.remove(filename_1)
+                os.remove(filename_2.replace("wav","mp3"))
+                self.pipe.flush_to_process()
+                
+                
                 self.perma_save = False
 
             else:
                 write("tmp_" + self.nom + ".wav", fs, record)
 
+class RecorderPipe:
+    def __init__(self):
+        self.to_process = None
+    def set_to_process(self, to_process):
+        self.to_process = to_process
+    def get_to_process(self):
+        return self.to_process
+    def flush_to_process(self):
+        self.to_process = None
 
 def start_record():
 
@@ -85,6 +135,7 @@ def start_record():
     stream_list = []
     listener_list = []
 
+
     for k in range(0, len(d)):
         for entry in config["entries"]:
             if (
@@ -95,7 +146,7 @@ def start_record():
                 list_to_record.append([k, entry["label"]])
 
     for record in list_to_record:
-        verify_dir(record[1])
+        verify_dir("record_"+record[1])
     for record_param in list_to_record:
         if record_param[0] != -1:
             stream_list.append(
@@ -105,16 +156,18 @@ def start_record():
                         device=record_param[0],
                         dtype="float32",
                     ),
-                    record_param[1],
+                    record_param[1]
                 ]
             )
 
     for stream in stream_list:
         stream[0].start()
+        pipe = RecorderPipe()
+        
         listener_list.append(
             [
-                Enregistreur(stream[0], 60 * duree_enregistrement, stream[1]),
-                stream[1],
+                Enregistreur(stream[0], 60 * duree_enregistrement, stream[1], pipe),
+                stream[1],pipe
             ]
         )
 
@@ -151,7 +204,14 @@ def start_record():
             )
             tmp = f"tmp_{listener[1]}.wav"
             if os.path.exists(tmp):
-                os.rename(tmp, listener[1] + "\\" + filename)
+                file_path = "record_" + listener[1] + "\\" + filename
+                os.rename(tmp, file_path)
+                
+                listener[2].set_to_process(file_path.replace(".wav",".mp3"))
+                
+                file_converter = ConvertFile(file_path)
+                file_converter.start()
+                
 
         print(
             "Les dernieres minutes sont en cours de traitement, deux fichiers seront bientot cree."
