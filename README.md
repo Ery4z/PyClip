@@ -3,7 +3,7 @@ _Always able to record already said things_
 
 ## What is PyClip
 PyClip is a python script that give you nuclear power in voice chat. This has been created in order to be able to "Clip" things like on twitch on my friend's discord. 
-To do this after configuration, PyClip will listen and continuously record last 2 minutes of theses channels. If you want to save the last two minutes, you only have to write something in the console app.
+To do this after configuration, PyClip will listen and continuously record last 2 minutes of theses channels. If you want to save the last two minutes, you only have to write something in the console app or use the F2 key.
 
 Please use this whisely and do not create too much trouble.
 ## How to install
