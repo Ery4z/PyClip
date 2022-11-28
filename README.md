@@ -19,10 +19,10 @@ If you want to listen to some app such as discord, ... Please read _How to liste
 As Pyclip can only record "Microphone", you have to use a virtual cable as the output of the app you want to listen.
 To do this follow this procedure:
 - Install a virtual cable app (for exemple [this one](https://vb-audio.com/Cable/index.htm))
-- Select it at the output of your game
+- Select it at the output of your app
 - In the sound configuration pannel choose in the cable output's properties "Listen on this peripheral". Choose your headset.
 
-You should be able to hear you app sound in your headset and select the cable in PyClip configuration
+You should be able to hear your app sound in your headset and select the cable in PyClip configuration
 
 
 
