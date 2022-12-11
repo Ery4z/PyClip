@@ -14,7 +14,7 @@ WANTED_KEY = keyboard.Key.f2
 
 
 
-
+FILE_PATH = os.path.dirname(os.path.realpath(__file__))
 
 os.system("cls")
 p = os.path.realpath(__file__)
@@ -89,10 +89,10 @@ class Enregistreur(Thread):
                     + ".wav"
                 )
                 
-                filename_2 = "record_"+self.nom + "\\" + name
-                filename_1 = self.pipe.get_to_process()
+                filename_2 = os.path.join(FILE_PATH,"record_"+self.nom + "\\" + name)
+                filename_1 = os.path.join(FILE_PATH,self.pipe.get_to_process())
                 
-                filename_final = filename_1.replace("_part1","")
+                filename_final = os.path.join(FILE_PATH,filename_1.replace("_part1",""))
                 
                 write(filename_2, fs, record)
                 file_converter = ConvertFile(filename_2)
@@ -120,7 +120,7 @@ class Enregistreur(Thread):
                 self.perma_save = False
 
             else:
-                write("tmp_" + self.nom + ".wav", fs, record)
+                write(os.path.join(FILE_PATH,"tmp_" + self.nom + ".wav"), fs, record)
                 self.pipe.global_pipe.ready_status = True
 
 class RecorderPipe:
@@ -220,9 +220,9 @@ def start_record():
                         )
                         + ".wav"
                     )
-                    tmp = f"tmp_{listener[1]}.wav"
+                    tmp = os.path.join(FILE_PATH,f"tmp_{listener[1]}.wav")
                     if os.path.exists(tmp):
-                        file_path = "record_" + listener[1] + "\\" + filename
+                        file_path = os.path.join(FILE_PATH,"record_" + listener[1] + "\\" + filename)
                         os.rename(tmp, file_path)
                         
                         listener[2].set_to_process(file_path.replace(".wav",".mp3"))
@@ -237,55 +237,12 @@ def start_record():
     with keyboard.Listener(
             on_release=on_release) as listener:
         listener.join()
-    """while True:
-        if (
-            str(
-                input(
-                    "Ecrivez quelque chose si vous voulez enregistrer les "
-                    + str(2 * duree_enregistrement)
-                    + " dernieres minutes : "
-                )
-            )
-            == "stop"
-        ):
-            for listener in listener_list:
-                listener[0].stop()
-            for listener in listener_list:
-                listener[0].join()
-            exit()
-        for listener in listener_list:
-            listener[0].perma_save = True
 
-            filename = (
-                str(
-                    time.strftime(
-                        f"{listener[1]}_%Y_%m_%d__%H_%M_%S_part1",
-                        time.gmtime(time.time()),
-                    )
-                )
-                + ".wav"
-            )
-            tmp = f"tmp_{listener[1]}.wav"
-            if os.path.exists(tmp):
-                file_path = "record_" + listener[1] + "\\" + filename
-                os.rename(tmp, file_path)
-                
-                listener[2].set_to_process(file_path.replace(".wav",".mp3"))
-                
-                file_converter = ConvertFile(file_path)
-                file_converter.start()
-                
 
-        print(
-            "Les dernieres minutes sont en cours de traitement, deux fichiers seront bientot cree."
-        )
-        print(
-            "-------------------------------------------------------------------"
-        )"""
 
 
 def load_setings():
-    with open("config.json", "r") as f:
+    with open(os.path.join(FILE_PATH,"config.json"), "r") as f:
         try:
             config = json.loads(f.read())
         except:
