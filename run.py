@@ -90,11 +90,12 @@ class Enregistreur(Thread):
                 )
                 
                 filename_2 = os.path.join(FILE_PATH,"record_"+self.nom + "\\" + name)
-                filename_1 = os.path.join(FILE_PATH,self.pipe.get_to_process())
+                filename_1 = self.pipe.get_to_process()
                 
-                filename_final = os.path.join(FILE_PATH,filename_1.replace("_part1",""))
+                filename_final = filename_1.replace("_part1","")
                 
                 write(filename_2, fs, record)
+                time.sleep(2)
                 file_converter = ConvertFile(filename_2)
                 file_converter.start()
                 file_converter.join()
